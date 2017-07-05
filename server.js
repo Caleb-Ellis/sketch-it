@@ -1,17 +1,19 @@
 // Set up dependencies
 var express = require('express');
 var http = require('http');
-var io = require('socket.io');
+var socketIo = require('socket.io');
 
 // Define port
 var PORT = process.env.PORT || 3000;
 
 // Configure server
 var app = express();
+var server = http.createServer(app);
+var io = socketIo.listen(server);
 app.use(express.static(__dirname + '/public'));
 
 // Start server
-app.listen(PORT, function() {
+server.listen(PORT, function() {
   console.log('App is running on port ' + PORT);
 });
 
@@ -19,21 +21,27 @@ app.listen(PORT, function() {
 /* --- SOCKET FUNCTIONS --- */
 
 // Array of all lines drawn
-var line_history = [];
+var lineHistory = [];
 
 // Handler for when new connection is made
 io.on('connection', function(socket) {
 
   // First, send history to client
-  for (var i in line_history) {
-    socket.emit('draw_line', { line: line_history[i] });
+  for (var i in lineHistory) {
+    socket.emit('draw-line', { line: lineHistory[i] });
   }
 
   // Handler for when draw_line event received
-  socket.on('draw_line', function(data) {
+  socket.on('draw-line', function(data) {
     // Add line to history
-    line_history.push(data.line);
+    lineHistory.push(data.line);
     // Send to all clients
-    io.emit('draw_line', { line: data.line });
+    io.emit('draw-line', { line: data.line });
   });
-};
+
+  // Handler for clearing canvas
+  socket.on('clear-canvas', function() {
+    lineHistory = [];
+    io.emit('clear-canvas', true);
+  });
+});
