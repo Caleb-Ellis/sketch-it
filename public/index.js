@@ -16,12 +16,14 @@ document.addEventListener('DOMContentLoaded', function() {
     pos_prev: false
   };
 
+  // Init canvas size
+  var canvasSize = 0.8;
+
   // Get canvas element and create context
   var canvas = document.getElementById('sketch');
   var context = canvas.getContext('2d');
-  var width = window.innerWidth * 0.8;
-  var height = window.innerHeight * 0.8;
-  console.log(window.innerWidth);
+  var width = window.innerWidth * canvasSize;
+  var height = window.innerHeight * canvasSize;
 
   // Set canvas to full browser width/height
   canvas.width = width;
@@ -37,9 +39,10 @@ document.addEventListener('DOMContentLoaded', function() {
   canvas.onmouseup = function(e){ mouse.click = false; };
   canvas.onmousemove = function(e) {
     // Normalise mouse position to range 0.0 - 1.0
-    mouse.pos.x = e.clientX / width;
-    mouse.pos.y = e.clientY / height;
+    mouse.pos.x = (e.clientX / width) - ((1 - canvasSize)/2);
+    mouse.pos.y = (e.clientY / height) - ((1 - canvasSize)/2);
     mouse.move = true;
+    console.log(e.clientX + ' ' + mouse.pos.x);
   };
 
   // Draw line received from server
