@@ -13,10 +13,9 @@ var io = socketIo.listen(server);
 app.use(express.static(__dirname + '/public'));
 
 // Start server
-server.listen(PORT, function() {
+server.listen(PORT, function () {
   console.log('App is running on port ' + PORT);
 });
-
 
 /* --- SOCKET FUNCTIONS --- */
 
@@ -24,7 +23,7 @@ server.listen(PORT, function() {
 var lineHistory = [];
 
 // Handler for when new connection is made
-io.on('connection', function(socket) {
+io.on('connection', function (socket) {
 
   // First, send history to client
   for (var i in lineHistory) {
@@ -32,16 +31,25 @@ io.on('connection', function(socket) {
   }
 
   // Handler for when draw_line event received
-  socket.on('draw-line', function(data) {
+  socket.on('draw-line', function (data) {
+
     // Add line to history
     lineHistory.push(data.line);
+
     // Send to all clients
     io.emit('draw-line', { line: data.line });
   });
 
   // Handler for clearing canvas
-  socket.on('clear-canvas', function() {
+  socket.on('clear-canvas', function () {
     lineHistory = [];
     io.emit('clear-canvas', true);
+  });
+
+  // Handler for redrawing canvas
+  socket.on('redraw-canvas', function () {
+    for (var i in lineHistory) {
+      io.emit('draw-line', { line: lineHistory[i] });
+    }
   });
 });
