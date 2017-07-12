@@ -1,95 +1,125 @@
 // Start socket connection
-var socket = io.connect();
+const socket = io.connect();
 
-// Clear canvas function
+// Init variables
+let mouse = {
+  click: false,
+  move: false,
+  pos: { x: 0, y: 0 },
+  pos_prev: false,
+};
+
+let canvas = document.getElementById('sketch-area');
+let context = canvas.getContext('2d');
+
+/* --- REGULAR FUNCTIONS ---*/
+
+// Event loop, running at 60Hz
+function mainLoop() {
+  // Check if user is drawing
+  if (mouse.click && mouse.move && mouse.pos_prev) {
+    // Send line to server
+    socket.emit('draw-line', {
+      line: [mouse.pos, mouse.pos_prev],
+      size: context.lineWidth,
+      colour: context.strokeStyle, });
+    mouse.move = false;
+  }
+
+  mouse.pos_prev = { x: mouse.pos.x, y: mouse.pos.y };
+  setTimeout(mainLoop, 1000 / 60);
+}
+
+function drawCanvas() {
+  // Set canvas to full browser width/height
+  canvas.width = $('#sketch-area').width();
+  canvas.height = $('#sketch-area').height();
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  return (canvas, context);
+}
+
 function clearCanvas() {
   socket.emit('clear-canvas', true);
 }
 
+function changePenSize(size) {
+  context.lineWidth = size;
+}
+
+function changePenColour(colour) {
+  context.strokeStyle = colour;
+}
+
 // When DOM content loaded
-$(document).ready(function () {
+$(document).ready(() => {
 
-  // Init mouse variable
-  var mouse = {
-    click: false,
-    move: false,
-    pos: { x: 0, y: 0 },
-    pos_prev: false,
-  };
-
-  // Get canvas element and create context
-  var canvas = document.getElementById('sketch-area');
-  var context = canvas.getContext('2d');
-  var width = $('#sketch-area').width();
-  var height = $('#sketch-area').height();
-
-  // Set canvas to full browser width/height
-  canvas.width = width;
-  canvas.height = height;
-  context.fillStyle = '#fff';
-  context.fillRect(0, 0, width, height);
+  /* --- EVENT LISTENERS ---*/
 
   // Reset canvas on window resize
-  $(window).resize(function () {
-    // Get canvas element and create context
-    canvas = document.getElementById('sketch-area');
-    context = canvas.getContext('2d');
-    width = $('#sketch-area').width();
-    height = $('#sketch-area').height();
-
-    // Set canvas to full browser width/height
-    canvas.width = width;
-    canvas.height = height;
-    context.fillStyle = '#fff';
-    context.fillRect(0, 0, width, height);
-
+  $(window).resize(() => {
+    drawCanvas();
     socket.emit('redraw-canvas');
   });
 
   // Register mouse event handlers
-  canvas.onmousedown = function (e) {
+  canvas.onmousedown = e => {
     mouse.click = true;
   };
 
-  canvas.onmouseup = function (e) {
+  $(window).mouseup(e => {
     mouse.click = false;
-  };
+  });
 
-  canvas.onmousemove = function (e) {
+  canvas.onmousemove = e => {
     // Normalise mouse position to range 0.0 - 1.0
-    mouse.pos.x = e.offsetX / width;
-    mouse.pos.y = e.offsetY / height;
+    mouse.pos.x = e.offsetX / canvas.width;
+    mouse.pos.y = e.offsetY / canvas.height;
     mouse.move = true;
   };
 
+  $('#send-btn').click(() => {
+    socket.emit('chat-message', {
+      message: document.getElementById('message').value,
+      handle: document.getElementById('handle').value,
+    });
+  });
+
+  $('#message').keypress((key) => {
+    if (key.which === 13) {
+      $('#send-btn').click();
+    }
+  });
+
+  /* --- SOCKET FUNCTIONS ---*/
+
   // Draw line received from server
-  socket.on('draw-line', function (data) {
-    var line = data.line;
+  socket.on('draw-line', data => {
+    let line = data.line;
+    let size = data.size;
+    let colour = data.colour;
     context.beginPath();
-    context.moveTo(line[0].x * width, line[0].y * height);
-    context.lineTo(line[1].x * width, line[1].y * height);
+    context.moveTo(line[0].x * canvas.width, line[0].y * canvas.height);
+    context.lineTo(line[1].x * canvas.width, line[1].y * canvas.height);
     context.stroke();
+    changePenSize(size);
+    changePenColour(colour);
   });
 
   // Clear function received from server
-  socket.on('clear-canvas', function () {
-    context.fillRect(0, 0, width, height);
+  socket.on('clear-canvas', () => {
+    context.fillRect(0, 0, canvas.width, canvas.height);
   });
 
-  // Event loop, running every 25ms
-  function mainLoop() {
-    // Check if user is drawing
-    if (mouse.click && mouse.move && mouse.pos_prev) {
-      // Send line to server
-      socket.emit('draw-line', { line: [mouse.pos, mouse.pos_prev] });
-      mouse.move = false;
-    }
+  // Display message received from server
+  socket.on('display-message', data => {
+    $('#output').append('<p><strong>' + data.handle + ': </strong>' + data.message + '</p>');
+    $('#message').val('');
+  });
 
-    mouse.pos_prev = { x: mouse.pos.x, y: mouse.pos.y };
-    setTimeout(mainLoop, 25);
-  }
+  /* --- RUN APP ---*/
 
-  // Run main loop
+  drawCanvas();
   mainLoop();
 
 });

@@ -1,5 +1,6 @@
 * {
   box-sizing: border-box;
+  user-select: none;
 }
 
 body, html {
@@ -17,6 +18,24 @@ h2 {
   padding: 10px;
   text-decoration: underline;
   text-align: center;
+}
+
+label {
+  box-sizing: border-box;
+  display: block;
+  padding: 10px 20px;
+}
+
+input {
+  padding: 10px 20px;
+  box-sizing: border-box;
+  background: #eee;
+  border: 0;
+  display: block;
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
 }
 
 .container {
@@ -55,9 +74,18 @@ h2 {
 
 .controls-area {
   display: flex;
+  flex-wrap: wrap;
   height: 20%;
   border-left: 2px solid #000;
   border-right: 2px solid #000;
+}
+
+.control-button {
+  height: 50px;
+  width: 14%;
+  font-size: 14px;
+  border: 0;
+  margin: 1%;
 }
 
 .chat-panel {
@@ -65,23 +93,20 @@ h2 {
   flex-direction: column;
   height: 100%;
   flex: 1;
-  overflow: auto;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 #chat-window {
   height: 100%;
 }
 
-#output p {
-  padding: 14px 0px;
-  margin: 0 20px;
-  border-bottom: 1px solid #e9e9e9;
-  color: #555;
+#output {
+  overflow-wrap: break-word;
 }
 
-#feedback p {
-  color: #aaa;
-  padding: 14px 0px;
+#output p {
+  padding: 10px 0;
   margin: 0 20px;
 }
 
@@ -89,39 +114,11 @@ h2 {
   color: #575ed8;
 }
 
-label {
-  box-sizing: border-box;
-  display: block;
-  padding: 10px 20px;
-}
-
-input {
-  padding: 10px 20px;
-  box-sizing: border-box;
-  background: #eee;
-  border: 0;
-  display: block;
-  width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  font-size: 16px;
-}
-
 #send-btn {
   background: #575ed8;
   color: #fff;
   font-size: 18px;
   border: 0;
-  padding: 12px 0;
-  width: 100%;
-  border-radius: 0 0 2px 2px;
-}
-
-#clear-btn {
-  background: #575ed8;
-  color: #fff;
-  font-size: 18px;
-  border: 0;
-  border-radius: 0 0 2px 2px;
+  padding: 10px 0;
   width: 100%;
 }

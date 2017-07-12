@@ -16,7 +16,12 @@
       <div class="draw-panel">
         <canvas id="sketch-area"></canvas>
         <div class="controls-area">
-          <button id="clear-btn" onclick="clearCanvas()">Clear</button>
+          <button id="clear-btn" class="control-button" onclick="clearCanvas()">Clear</button>
+          <button id="small-btn" class="control-button" onclick="changePenSize(1)">Small</button>
+          <button id="large-btn" class="control-button" onclick="changePenSize(5)">Large</button>
+          <button id="black-btn" class="control-button" onclick="changePenColour('#000')">Black</button>
+          <button id="red-btn" class="control-button" onclick="changePenColour('#f00')">Red</button>
+          <button id="erase-btn" class="control-button" onclick="changePenColour('#fff')">Erase</button>
         </div>
       </div>
 
@@ -27,7 +32,7 @@
         </div>
         <input id="handle" type="text" placeholder="Handle" />
         <input id="message" type="text" placeholder="Message" />
-        <button id="send-btn">Message</button>
+        <button id="send-btn">Guess</button>
       </div>
 
     </div>
