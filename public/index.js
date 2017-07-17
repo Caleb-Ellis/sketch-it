@@ -39,8 +39,16 @@ function drawCanvas() {
   return (canvas, context);
 }
 
+function undoMove() {
+  socket.emit('undo-move');
+}
+
+function redoMove() {
+  socket.emit('redo-move');
+}
+
 function clearCanvas() {
-  socket.emit('clear-canvas', true);
+  socket.emit('clear-history');
 }
 
 function changePenSize(size) {
@@ -65,10 +73,12 @@ $(document).ready(() => {
   // Register mouse event handlers
   canvas.onmousedown = e => {
     mouse.click = true;
+    socket.emit('add-checkpoint');
   };
 
   $(window).mouseup(e => {
     mouse.click = false;
+    socket.emit('add-checkpoint');
   });
 
   canvas.onmousemove = e => {
@@ -98,12 +108,12 @@ $(document).ready(() => {
     let line = data.line;
     let size = data.size;
     let colour = data.colour;
+    changePenSize(size);
+    changePenColour(colour);
     context.beginPath();
     context.moveTo(line[0].x * canvas.width, line[0].y * canvas.height);
     context.lineTo(line[1].x * canvas.width, line[1].y * canvas.height);
     context.stroke();
-    changePenSize(size);
-    changePenColour(colour);
   });
 
   // Clear function received from server

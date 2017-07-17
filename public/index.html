@@ -17,11 +17,13 @@
         <canvas id="sketch-area"></canvas>
         <div class="controls-area">
           <button id="clear-btn" class="control-button" onclick="clearCanvas()">Clear</button>
+          <button id="undo-btn" class="control-button" onclick="undoMove()">Undo</button>
+          <button id="redo-btn" class="control-button" onclick="redoMove()">Redo</button>
           <button id="small-btn" class="control-button" onclick="changePenSize(1)">Small</button>
           <button id="large-btn" class="control-button" onclick="changePenSize(5)">Large</button>
           <button id="black-btn" class="control-button" onclick="changePenColour('#000')">Black</button>
           <button id="red-btn" class="control-button" onclick="changePenColour('#f00')">Red</button>
-          <button id="erase-btn" class="control-button" onclick="changePenColour('#fff')">Erase</button>
+          <button id="erase-btn" class="control-button" onclick="changePenColour('#fff')">Eraser</button>
         </div>
       </div>
 
