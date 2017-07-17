@@ -116,6 +116,11 @@ $(document).ready(() => {
     context.stroke();
   });
 
+  // Redraw canvas received from server
+  socket.on('redraw-canvas', () => {
+    socket.emit('redraw-canvas');
+  });
+
   // Clear function received from server
   socket.on('clear-canvas', () => {
     context.fillRect(0, 0, canvas.width, canvas.height);

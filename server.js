@@ -69,6 +69,7 @@ io.on('connection', socket => {
     io.emit('clear-canvas');
   });
 
+  // Handler for adding checkpoints for undo/redo
   socket.on('add-checkpoint', () => {
     let checkpoint = lineHistory.length;
     if (!checkpoints.includes(checkpoint)) {
@@ -79,54 +80,45 @@ io.on('connection', socket => {
   // Handler for undoing previous stroke
   socket.on('undo-move', () => {
     if (lineHistory.length > 0) {
-      let end = checkpoints[checkpoints.length - 2];
-      let trueEnd = checkpoints[checkpoints.length - 1];
+      // Determine indices for the endpoints of lineHistory and lineFuture
+      let historyEnd = checkpoints[checkpoints.length - 2];
+      let futureEnd = checkpoints[checkpoints.length - 1];
 
-      for (let i = end; i < trueEnd; i++) {
+      // Store history in future array before slicing
+      for (let i = historyEnd; i < futureEnd; i++) {
         lineFuture.unshift(lineHistory[i]);
       }
 
+      lineHistory = lineHistory.slice(0, historyEnd);
+
+      // Organise checkpoints
       checkpointsFuture.unshift(checkpoints.pop());
 
-      lineHistory = lineHistory.slice(0, end);
-      io.emit('clear-canvas');
-      for (let i in lineHistory) {
-        io.emit('draw-line', {
-          line: lineHistory[i].line,
-          size: lineHistory[i].size,
-          colour: lineHistory[i].colour,
-        });
-      }
+      io.emit('redraw-canvas');
     }
   });
 
   // Handler for redoing previously undone stroke
   socket.on('redo-move', () => {
     if (lineFuture.length > 0) {
-      for (let i in lineFuture) {
-        lineHistory.push(lineFuture[i]);
+      // Determine indices of lines to redraw
+      let length = checkpointsFuture[0] - checkpoints[checkpoints.length - 1];
+
+      // Pull future lines back in to lineHistory
+      for (let i = 0; i < length; i++) {
+        lineHistory.push(lineFuture.shift());
       }
 
-      for (let i in checkpointsFuture) {
-        checkpoints.push(checkpointsFuture[i]);
-      }
+      // Organise checkpoints
+      checkpoints.push(checkpointsFuture.shift());
 
-      lineFuture = [];
-      checkpointsFuture = [];
-
-      io.emit('clear-canvas');
-      for (let i in lineHistory) {
-        io.emit('draw-line', {
-          line: lineHistory[i].line,
-          size: lineHistory[i].size,
-          colour: lineHistory[i].colour,
-        });
-      }
+      io.emit('redraw-canvas');
     }
   });
 
   // Handler for redrawing canvas
   socket.on('redraw-canvas', () => {
+    io.emit('clear-canvas');
     for (let i in lineHistory) {
       io.emit('draw-line', {
         line: lineHistory[i].line,
