@@ -1,5 +1,5 @@
 // Start socket connection
-const socket = io.connect();
+const socket = io.connect('http://localhost:3000');
 
 // Init variables
 let mouse = {
@@ -91,7 +91,6 @@ $(document).ready(() => {
   $('#send-btn').click(() => {
     socket.emit('chat-message', {
       message: document.getElementById('message').value,
-      handle: document.getElementById('handle').value,
     });
   });
 
@@ -101,40 +100,64 @@ $(document).ready(() => {
     }
   });
 
-  /* --- SOCKET FUNCTIONS ---*/
-
-  // Draw line received from server
-  socket.on('draw-line', data => {
-    let line = data.line;
-    let size = data.size;
-    let colour = data.colour;
-    changePenSize(size);
-    changePenColour(colour);
-    context.beginPath();
-    context.moveTo(line[0].x * canvas.width, line[0].y * canvas.height);
-    context.lineTo(line[1].x * canvas.width, line[1].y * canvas.height);
-    context.stroke();
-  });
-
-  // Redraw canvas received from server
-  socket.on('redraw-canvas', () => {
-    socket.emit('redraw-canvas');
-  });
-
-  // Clear function received from server
-  socket.on('clear-canvas', () => {
-    context.fillRect(0, 0, canvas.width, canvas.height);
-  });
-
-  // Display message received from server
-  socket.on('display-message', data => {
-    $('#output').append('<p><strong>' + data.handle + ': </strong>' + data.message + '</p>');
-    $('#message').val('');
-  });
-
   /* --- RUN APP ---*/
 
   drawCanvas();
   mainLoop();
 
+});
+
+/* --- SOCKET FUNCTIONS ---*/
+
+// On connection to server, ask for user's name
+socket.on('connect', () => {
+  console.log('connected');
+  socket.emit('add-user', prompt('Please enter a username'));
+});
+
+// Draw line received from server
+socket.on('draw-line', data => {
+  let line = data.line;
+  let size = data.size;
+  let colour = data.colour;
+  changePenSize(size);
+  changePenColour(colour);
+  context.beginPath();
+  context.moveTo(line[0].x * canvas.width, line[0].y * canvas.height);
+  context.lineTo(line[1].x * canvas.width, line[1].y * canvas.height);
+  context.stroke();
+});
+
+// Redraw canvas received from server
+socket.on('redraw-canvas', () => {
+  socket.emit('redraw-canvas');
+});
+
+// Clear function received from server
+socket.on('clear-canvas', () => {
+  context.fillRect(0, 0, canvas.width, canvas.height);
+});
+
+// Display chat message received from server
+socket.on('display-message', data => {
+  if (data.username && data.message) {
+    $('#output').append('<p><strong>' + data.username + ': </strong>' + data.message + '</p>');
+  }
+
+  $('#message').val('');
+});
+
+// Display connection message received from server
+socket.on('connection-message', data => {
+  $('#output').append('<p><em>' + data.username + ' has ' + data.connection);
+});
+
+// Update user list
+socket.on('update-users', data => {
+  $('#users').empty();
+  $.each(data, (key, value) => {
+    if (key !== null) {
+      $('#users').append('<li>' + key + '</li>');
+    }
+  });
 });

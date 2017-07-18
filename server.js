@@ -19,6 +19,8 @@ server.listen(PORT, function () {
 
 /* --- SOCKET FUNCTIONS --- */
 
+let usernames = {};
+
 // Line arrays
 let lineHistory = [];
 let lineFuture = [];
@@ -26,7 +28,7 @@ let checkpoints = [];
 let checkpointsFuture = [];
 
 // Handler for when new connection is made
-io.on('connection', socket => {
+io.sockets.on('connection', socket => {
 
   // First, send history to client
   for (let i in lineHistory) {
@@ -36,6 +38,33 @@ io.on('connection', socket => {
       colour: lineHistory[i].colour,
     });
   }
+
+  io.emit('update-users', usernames);
+
+  // Handler for when the client enters username
+  socket.on('add-user', username => {
+    if (username) {
+      socket.username = username;
+      usernames[username] = username;
+      let data = {
+        username: username,
+        connection: 'connected',
+      };
+      io.emit('update-users', usernames);
+      io.emit('connection-message', data);
+    }
+  });
+
+  // Handler for when user disconnects
+  socket.on('disconnect', () => {
+    delete usernames[socket.username];
+    let data = {
+      username: socket.username,
+      connection: 'disconnected',
+    };
+    io.emit('update-users', usernames);
+    io.emit('connection-message', data);
+  });
 
   // Handler for when draw_line event received
   socket.on('draw-line', data => {
@@ -130,6 +159,12 @@ io.on('connection', socket => {
 
   // Handler for sending chat message
   socket.on('chat-message', data => {
+    data.username = socket.username;
     io.emit('display-message', data);
+  });
+
+  // Handler for sending connection message
+  socket.on('connection-msg', data => {
+    io.emit('connection-message', data);
   });
 });
