@@ -11,6 +11,7 @@ let mouse = {
 
 let canvas = document.getElementById('sketch-area');
 let context = canvas.getContext('2d');
+let username, currentWord;
 
 /* --- REGULAR FUNCTIONS ---*/
 
@@ -37,6 +38,10 @@ function drawCanvas() {
   context.fillStyle = '#fff';
   context.fillRect(0, 0, canvas.width, canvas.height);
   return (canvas, context);
+}
+
+function startGame() {
+  socket.emit('choose-word');
 }
 
 function undoMove() {
@@ -89,9 +94,19 @@ $(document).ready(() => {
   };
 
   $('#send-btn').click(() => {
+    let message = document.getElementById('message').value.toLowerCase();
     socket.emit('chat-message', {
-      message: document.getElementById('message').value,
+      message: message,
     });
+    if (message === currentWord) {
+      $('.current-word').html(currentWord);
+      socket.emit('guessed-correctly', {
+        username: username,
+        currentWord: currentWord,
+      });
+      clearCanvas();
+      startGame();
+    }
   });
 
   $('#message').keypress((key) => {
@@ -111,8 +126,8 @@ $(document).ready(() => {
 
 // On connection to server, ask for user's name
 socket.on('connect', () => {
-  console.log('connected');
-  socket.emit('add-user', prompt('Please enter a username'));
+  socket.emit('add-user', username = prompt('Please enter a username'));
+  console.log(username + ' connected');
 });
 
 // Draw line received from server
@@ -143,13 +158,12 @@ socket.on('display-message', data => {
   if (data.username && data.message) {
     $('#output').append('<p><strong>' + data.username + ': </strong>' + data.message + '</p>');
   }
-
   $('#message').val('');
 });
 
 // Display connection message received from server
 socket.on('connection-message', data => {
-  $('#output').append('<p><em>' + data.username + ' has ' + data.connection);
+  $('#output').append('<p><em>' + data.username + ' has ' + data.connection + '</em></p>');
 });
 
 // Update user list
@@ -160,4 +174,22 @@ socket.on('update-users', data => {
       $('#users').append('<li>' + key + '</li>');
     }
   });
+});
+
+// Select new word
+socket.on('new-word', data => {
+  currentWord = data.currentWord;
+  let currentPlayer = data.currentPlayer;
+  let guessWord = currentWord.replace(/./g, '_');
+
+  if (socket.id === currentPlayer) {
+    $('.current-word').html(currentWord);
+  } else {
+    $('.current-word').html(guessWord);
+  }
+});
+
+// Display message to all sockets when someone guesses correctly
+socket.on('correct-guess-message', data => {
+  $('#output').append('<p><strong>' + data.username + ' correctly guessed ' + data.currentWord + '</strong></p>');
 });

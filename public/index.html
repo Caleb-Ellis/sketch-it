@@ -14,8 +14,12 @@
         </ul>
       </div>
       <div class="draw-panel">
+        <div class="word-area">
+          <h3 class="current-word"></h3>
+        </div>
         <canvas id="sketch-area"></canvas>
         <div class="controls-area">
+          <button id="start-btn" class="control-button" onclick="startGame()">Start</button>
           <button id="clear-btn" class="control-button" onclick="clearCanvas()">Clear</button>
           <button id="undo-btn" class="control-button" onclick="undoMove()">Undo</button>
           <button id="redo-btn" class="control-button" onclick="redoMove()">Redo</button>

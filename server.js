@@ -2,6 +2,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const fs = require('fs');
 
 // Define port
 const PORT = process.env.PORT || 3000;
@@ -13,19 +14,27 @@ const io = socketIo.listen(server);
 app.use(express.static(__dirname + '/public'));
 
 // Start server
-server.listen(PORT, function () {
+server.listen(PORT, () => {
   console.log('App is running on port ' + PORT);
 });
 
-/* --- SOCKET FUNCTIONS --- */
+/* --- APP LOGIC --- */
 
 let usernames = {};
+let dictionary, currentWord, currentPlayer;
 
 // Line arrays
 let lineHistory = [];
 let lineFuture = [];
 let checkpoints = [];
 let checkpointsFuture = [];
+
+// Load dictionary into memory
+fs.readFile(__dirname + '/dictionary.txt', (err, data) => {
+  dictionary = data.toString('utf-8').split('\n');
+});
+
+/* --- SOCKET FUNCTIONS --- */
 
 // Handler for when new connection is made
 io.sockets.on('connection', socket => {
@@ -166,5 +175,23 @@ io.sockets.on('connection', socket => {
   // Handler for sending connection message
   socket.on('connection-msg', data => {
     io.emit('connection-message', data);
+  });
+
+  // Handler for choosing new word
+  socket.on('choose-word', () => {
+
+    let randomLine = Math.floor(Math.random() * dictionary.length),
+              line = dictionary[randomLine],
+              word = line.split(',');
+    let data = {
+      currentPlayer: socket.id,
+      currentWord: word[0]
+    }
+    io.emit('new-word', data);
+  });
+
+  // Handler for when a user guesses the word correctly
+  socket.on('guessed-correctly', data => {
+    io.emit('correct-guess-message', data);
   });
 });
