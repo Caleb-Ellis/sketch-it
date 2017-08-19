@@ -98,6 +98,7 @@ $(document).ready(() => {
     socket.emit('chat-message', {
       message: message,
     });
+
     if (message === currentWord) {
       $('.current-word').html(currentWord);
       socket.emit('guessed-correctly', {
@@ -119,6 +120,7 @@ $(document).ready(() => {
 
   drawCanvas();
   mainLoop();
+  $('#message').focus();
 
 });
 
@@ -159,7 +161,9 @@ socket.on('display-message', data => {
     $('#output').append('<p><strong>' + data.username + ': </strong>' + data.message + '</p>');
   }
   $('#message').val('');
-});
+
+  // Auto-scroll to bottom of chat window
+  $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);});
 
 // Display connection message received from server
 socket.on('connection-message', data => {
@@ -192,4 +196,8 @@ socket.on('new-word', data => {
 // Display message to all sockets when someone guesses correctly
 socket.on('correct-guess-message', data => {
   $('#output').append('<p><strong>' + data.username + ' correctly guessed ' + data.currentWord + '</strong></p>');
+
+  // Auto-scroll to bottom of chat window
+  $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);});
+
 });
