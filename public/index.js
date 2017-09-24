@@ -198,6 +198,6 @@ socket.on('correct-guess-message', data => {
   $('#output').append('<p><strong>' + data.username + ' correctly guessed ' + data.currentWord + '</strong></p>');
 
   // Auto-scroll to bottom of chat window
-  $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);});
+  $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
 
 });
